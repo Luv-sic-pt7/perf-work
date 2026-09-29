@@ -2143,7 +2143,6 @@ int perf_poll_cq(struct ibv_cq *cq, uint32_t ne, struct ibv_wc *wc, int cqe_ver)
 
 void perf_create_read_qp()
 {
-	struct ibv_device      **dev_list;
 	struct ibv_device	*ib_dev;
 
   char* env;  
@@ -2161,17 +2160,12 @@ void perf_create_read_qp()
   if(env)
     MAX_READ_BATCH_NUM = atoi(env);
  
-  dev_list = ibv_get_device_list(NULL);
-	if (!dev_list) {
-		LOG_ERROR("Failed to get IB devices list for read qp\n");
-		exit(1);
-	}
-
-  ib_dev = *dev_list;
-  if (!ib_dev) {
-    LOG_ERROR("No IB devices found for read qp\n");
+  if (!qp_ctx || !qp_ctx[0].qp || !qp_ctx[0].qp->context ||
+      !qp_ctx[0].qp->context->device) {
+    LOG_ERROR("No main QP device for read qp\n");
     exit(1);
   }
+  ib_dev = qp_ctx[0].qp->context->device;
 
   read_qp_ctx.context = ibv_open_device(ib_dev); 
   if(!read_qp_ctx.context)
@@ -3180,7 +3174,6 @@ int perf_exp_poll_cq(struct ibv_cq *cq, uint32_t ne, struct ibv_exp_wc *wc, uint
   
 	return mlx5_poll_cq_ex2(cq, ne, wc, wc_size, cqe_ver, 1);
 }
-
 
 
 
